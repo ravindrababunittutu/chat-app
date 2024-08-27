@@ -20,7 +20,8 @@ app.use(express.json()); // Parse JSON bodies
 app.use(session({
     secret: 'your_secret_key',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: { secure: false } // Change to true in production with HTTPS
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -33,6 +34,7 @@ const ensureAuthenticated = (req, res, next) => {
     if (req.isAuthenticated()) {
         return next();
     }
+    console.log('User not authenticated, redirecting to /login');
     res.redirect('/login');
 };
 
@@ -49,10 +51,6 @@ app.post('/login', passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/login',
 }));
-
-app.get('/login', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
 
 app.get('/register', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'register.html'));
@@ -74,6 +72,16 @@ app.post('/register', async (req, res) => {
     }
 });
 
+// Define route for logging out
+app.get('/logout', (req, res, next) => {
+    req.logout((err) => {
+        if (err) {
+            return next(err);
+        }
+        res.redirect('/login');
+    });
+});
+
 // Listen for new socket connections
 io.on('connection', async (socket) => {
     console.log('A user connected');
@@ -85,7 +93,7 @@ io.on('connection', async (socket) => {
     // Listen for chat messages from clients
     socket.on('chat message', async (msg) => {
         // Check if the user is authenticated
-        const user = socket.request.user;
+        const user = socket.request.user; // Ensure this is correctly populated
         if (user) {
             // Save the message to the database
             const message = await Message.create({ text: `${user.username}: ${msg}` });

@@ -3,6 +3,7 @@ const socket = io();
 const sendButton = document.getElementById('send-button');
 const messageInput = document.getElementById('message-input');
 const chatWindow = document.getElementById('chat-window');
+const logoutButton = document.getElementById('logout-button'); // Add this line
 
 // Event listener for sending messages
 sendButton.addEventListener('click', function() {
@@ -11,6 +12,11 @@ sendButton.addEventListener('click', function() {
         socket.emit('chat message', message);
         messageInput.value = '';
     }
+});
+
+// Event listener for logging out
+logoutButton.addEventListener('click', function() {
+    window.location.href = '/logout';
 });
 
 // Listen for loaded messages from the server
